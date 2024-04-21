@@ -2,7 +2,7 @@
 
 ### Installation
 ```bash
-go install github.com/bcdevtools/chain-registry-validation-tool@latest
+go install github.com/bcdevtools/chain-registry-validation-tool/cmd/crv@latest
 ```
 
 ### Basic usage
