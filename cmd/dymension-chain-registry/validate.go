@@ -483,6 +483,7 @@ func isValidIbc(ibc *valtypes.IbcChainDefinition) bool {
 		return false
 	}
 	if len(ibc.AllowedDenoms) > 0 {
+		uniquenessTracker := make(map[string]bool)
 		for _, denom := range ibc.AllowedDenoms {
 			if denom == "" {
 				utils.PrintlnStdErr("ERR: IBC allowed denom must not be empty")
@@ -512,6 +513,11 @@ func isValidIbc(ibc *valtypes.IbcChainDefinition) bool {
 				utils.PrintlnStdErr("ERR: IBC allowed denom must be alphanumeric, dash, underscore, or slash")
 				return false
 			}
+			if _, found := uniquenessTracker[denom]; found {
+				utils.PrintlnStdErr("ERR: Duplicated IBC allowed denom found:", denom)
+				return false
+			}
+			uniquenessTracker[denom] = true
 		}
 	}
 	return true
@@ -546,6 +552,11 @@ func isValidCoinType(coinType int64) bool {
 
 func isValidCurrencies(currencies []valtypes.CurrencyChainDefinition, chainPath string) (valid bool, identity string) {
 	var foundMain bool
+
+	uniqueBaseDenomTracker := make(map[string]bool)
+	uniqueDisplayDenomTracker := make(map[string]bool)
+	uniqueIbcRepresentationTracker := make(map[string]bool)
+
 	for _, currency := range currencies {
 		if !isValidCurrency(currency, chainPath) {
 			var descCurrency string
@@ -569,6 +580,31 @@ func isValidCurrencies(currencies []valtypes.CurrencyChainDefinition, chainPath 
 				foundMain = true
 			}
 		}
+
+		if currency.BaseDenom != "" {
+			if _, found := uniqueBaseDenomTracker[currency.BaseDenom]; found {
+				utils.PrintlnStdErr("ERR: Duplicated base denom found:", currency.BaseDenom)
+				return false, currency.BaseDenom
+			}
+			uniqueBaseDenomTracker[currency.BaseDenom] = true
+		}
+
+		if currency.DisplayDenom != "" {
+			if _, found := uniqueDisplayDenomTracker[currency.DisplayDenom]; found {
+				utils.PrintlnStdErr("ERR: Duplicated display denom found:", currency.DisplayDenom)
+				return false, currency.DisplayDenom
+			}
+			uniqueDisplayDenomTracker[currency.DisplayDenom] = true
+		}
+
+		if currency.IbcRepresentation != "" {
+			if _, found := uniqueIbcRepresentationTracker[currency.IbcRepresentation]; found {
+				utils.PrintlnStdErr("ERR: Duplicated IBC representation found:", currency.IbcRepresentation)
+				return false, currency.IbcRepresentation
+			}
+			uniqueIbcRepresentationTracker[currency.IbcRepresentation] = true
+		}
+
 	}
 	if !foundMain {
 		utils.PrintlnStdErr("ERR: At least one main currency is required")
