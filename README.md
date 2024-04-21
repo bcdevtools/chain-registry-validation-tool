@@ -1,0 +1,1 @@
+## Chain Registry validation tool
