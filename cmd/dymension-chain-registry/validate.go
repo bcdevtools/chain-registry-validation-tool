@@ -252,6 +252,13 @@ func validateChainRegistry(repoDir string, target valtypes.ValidateTarget, stopO
 			markErr("Bad REST urls:", restUrls)
 		}
 
+		beRpcUrls, err := cd.GetBeRpcUrls()
+		if err != nil {
+			markErr("Failed to get Be RPC urls:", err)
+		} else if !isValidUrls(beRpcUrls) {
+			markErr("Bad Be RPC urls:", beRpcUrls)
+		}
+
 		if cd.IsRollAppChain() {
 			if cd.Bech32Prefix == "" {
 				markErr("Bech32 prefix is required for RollApp chains")

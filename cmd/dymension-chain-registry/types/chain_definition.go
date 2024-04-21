@@ -10,6 +10,7 @@ type ChainDefinition struct {
 	ChainName     string                        `json:"chainName"`
 	RpcUrls       any                           `json:"rpc"`
 	RestUrls      any                           `json:"rest"`
+	BeRpcUrls     any                           `json:"beRpc"`
 	Bech32Prefix  string                        `json:"bech32Prefix"`
 	WebSite       string                        `json:"website,omitempty"`
 	DA            string                        `json:"da"`
@@ -65,6 +66,10 @@ func (cd ChainDefinition) GetRpcUrls() ([]string, error) {
 
 func (cd ChainDefinition) GetRestUrls() ([]string, error) {
 	return getUrlsFromDynamicValue(cd.RestUrls)
+}
+
+func (cd ChainDefinition) GetBeRpcUrls() ([]string, error) {
+	return getUrlsFromDynamicValue(cd.BeRpcUrls)
 }
 
 func (cd ChainDefinition) GetEvmRpcUrls() ([]string, error) {
