@@ -23,6 +23,12 @@ func Test_GetXUrls(t *testing.T) {
 				return cd.GetRestUrls()
 			},
 		},
+		{
+			name: "beRpc",
+			urlsGetter: func(cd ChainDefinition) ([]string, error) {
+				return cd.GetBeRpcUrls()
+			},
+		},
 	}
 	for _, tt := range tests {
 		name := tt.name
