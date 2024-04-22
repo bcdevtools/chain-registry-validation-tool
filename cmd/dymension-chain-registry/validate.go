@@ -296,7 +296,7 @@ func validateChainRegistry(repoDir string, target valtypes.ValidateTarget, stopO
 		}
 
 		if len(cd.Currencies) > 0 {
-			if valid, identity := isValidCurrencies(cd.Currencies, filePath); !valid {
+			if valid, identity := isValidCurrencies(cd.Currencies, filePath, cd.Type); !valid {
 				if identity == "" {
 					markErr("Bad currencies")
 				} else {
@@ -311,7 +311,7 @@ func validateChainRegistry(repoDir string, target valtypes.ValidateTarget, stopO
 			if cd.CoinType != 60 {
 				markErr("Coin type must be 60 for EVM RollApp chains")
 			}
-		} else if !isValidCoinType(cd.CoinType) {
+		} else if !isValidCoinType(cd.CoinType, cd.Type) {
 			markErr("Bad coin type:", cd.CoinType)
 		}
 
@@ -538,19 +538,25 @@ func isValidGasAdjustment(gasAdjustment float64) bool {
 	return true
 }
 
-func isValidCoinType(coinType int64) bool {
+func isValidCoinType(coinType int64, chainType string) bool {
 	if coinType < 0 {
 		utils.PrintlnStdErr("ERR: Coin type must be non-negative")
 		return false
 	}
-	if coinType > 255 {
-		utils.PrintlnStdErr("ERR: Coin type must not exceed 255")
-		return false
+	switch chainType {
+	case "EVM", "Solana":
+		return true
+	default:
+		if coinType == 0 {
+			utils.PrintlnStdErr("ERR: Coin type must be positive")
+			return false
+
+		}
 	}
 	return true
 }
 
-func isValidCurrencies(currencies []valtypes.CurrencyChainDefinition, chainPath string) (valid bool, identity string) {
+func isValidCurrencies(currencies []valtypes.CurrencyChainDefinition, chainPath string, chainType string) (valid bool, identity string) {
 	var foundMain bool
 
 	uniqueBaseDenomTracker := make(map[string]bool)
@@ -558,7 +564,7 @@ func isValidCurrencies(currencies []valtypes.CurrencyChainDefinition, chainPath 
 	uniqueIbcRepresentationTracker := make(map[string]bool)
 
 	for _, currency := range currencies {
-		if !isValidCurrency(currency, chainPath) {
+		if !isValidCurrency(currency, chainPath, chainType) {
 			var descCurrency string
 			bz, err := json.Marshal(currency)
 			if err != nil {
@@ -614,7 +620,7 @@ func isValidCurrencies(currencies []valtypes.CurrencyChainDefinition, chainPath 
 	return true, ""
 }
 
-func isValidCurrency(currency valtypes.CurrencyChainDefinition, chainPath string) bool {
+func isValidCurrency(currency valtypes.CurrencyChainDefinition, chainPath string, chainType string) bool {
 	if currency.DisplayDenom == "" {
 		utils.PrintlnStdErr("ERR: Display denom is required")
 		return false
@@ -693,6 +699,12 @@ func isValidCurrency(currency valtypes.CurrencyChainDefinition, chainPath string
 		}
 		if !regexp.MustCompile(`^[a-zA-Z\d\s-_/]+$`).MatchString(currency.BridgeDenom) {
 			utils.PrintlnStdErr("ERR: Bridge denom must be alphanumeric, space, underscore, dash, or slash")
+			return false
+		}
+	} else {
+		switch chainType {
+		case "EVM", "Solana":
+			utils.PrintlnStdErr("ERR: Bridge denom is required for EVM and Solana chains")
 			return false
 		}
 	}
