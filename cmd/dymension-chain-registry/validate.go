@@ -311,7 +311,7 @@ func validateChainRegistry(repoDir string, target valtypes.ValidateTarget, stopO
 			if cd.CoinType != 60 {
 				markErr("Coin type must be 60 for EVM RollApp chains")
 			}
-		} else if !isValidCoinType(cd.CoinType) {
+		} else if !isValidCoinType(cd.CoinType, cd.Type) {
 			markErr("Bad coin type:", cd.CoinType)
 		}
 
@@ -538,13 +538,9 @@ func isValidGasAdjustment(gasAdjustment float64) bool {
 	return true
 }
 
-func isValidCoinType(coinType int64) bool {
+func isValidCoinType(coinType int64, chainType string) bool {
 	if coinType < 0 {
 		utils.PrintlnStdErr("ERR: Coin type must be non-negative")
-		return false
-	}
-	if coinType > 255 {
-		utils.PrintlnStdErr("ERR: Coin type must not exceed 255")
 		return false
 	}
 	return true
