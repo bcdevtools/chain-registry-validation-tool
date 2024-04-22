@@ -543,6 +543,16 @@ func isValidCoinType(coinType int64, chainType string) bool {
 		utils.PrintlnStdErr("ERR: Coin type must be non-negative")
 		return false
 	}
+	switch chainType {
+	case "EVM", "Solana":
+		return true
+	default:
+		if coinType == 0 {
+			utils.PrintlnStdErr("ERR: Coin type must be positive")
+			return false
+
+		}
+	}
 	return true
 }
 
