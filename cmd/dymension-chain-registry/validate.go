@@ -296,7 +296,7 @@ func validateChainRegistry(repoDir string, target valtypes.ValidateTarget, stopO
 		}
 
 		if len(cd.Currencies) > 0 {
-			if valid, identity := isValidCurrencies(cd.Currencies, filePath); !valid {
+			if valid, identity := isValidCurrencies(cd.Currencies, filePath, cd.Type); !valid {
 				if identity == "" {
 					markErr("Bad currencies")
 				} else {
@@ -550,7 +550,7 @@ func isValidCoinType(coinType int64) bool {
 	return true
 }
 
-func isValidCurrencies(currencies []valtypes.CurrencyChainDefinition, chainPath string) (valid bool, identity string) {
+func isValidCurrencies(currencies []valtypes.CurrencyChainDefinition, chainPath string, chainType string) (valid bool, identity string) {
 	var foundMain bool
 
 	uniqueBaseDenomTracker := make(map[string]bool)
@@ -558,7 +558,7 @@ func isValidCurrencies(currencies []valtypes.CurrencyChainDefinition, chainPath 
 	uniqueIbcRepresentationTracker := make(map[string]bool)
 
 	for _, currency := range currencies {
-		if !isValidCurrency(currency, chainPath) {
+		if !isValidCurrency(currency, chainPath, chainType) {
 			var descCurrency string
 			bz, err := json.Marshal(currency)
 			if err != nil {
@@ -614,7 +614,7 @@ func isValidCurrencies(currencies []valtypes.CurrencyChainDefinition, chainPath 
 	return true, ""
 }
 
-func isValidCurrency(currency valtypes.CurrencyChainDefinition, chainPath string) bool {
+func isValidCurrency(currency valtypes.CurrencyChainDefinition, chainPath string, chainType string) bool {
 	if currency.DisplayDenom == "" {
 		utils.PrintlnStdErr("ERR: Display denom is required")
 		return false
@@ -693,6 +693,12 @@ func isValidCurrency(currency valtypes.CurrencyChainDefinition, chainPath string
 		}
 		if !regexp.MustCompile(`^[a-zA-Z\d\s-_/]+$`).MatchString(currency.BridgeDenom) {
 			utils.PrintlnStdErr("ERR: Bridge denom must be alphanumeric, space, underscore, dash, or slash")
+			return false
+		}
+	} else {
+		switch chainType {
+		case "EVM", "Solana":
+			utils.PrintlnStdErr("ERR: Bridge denom is required for EVM and Solana chains")
 			return false
 		}
 	}
